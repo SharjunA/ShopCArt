@@ -118,7 +118,7 @@ internal class Program
             Console.Write("Product IDs: [");
             foreach (var productId in discount.ProductIds)
             {
-                Console.Write($"{productId}, ");
+                Console.Write($"{productId} ");
             }
             Console.WriteLine("]");
         }
