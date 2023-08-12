@@ -134,13 +134,10 @@ internal class Program
         else
         {
             double totalPrice = 0;
+            Console.WriteLine($"\nProduct ID\tName\tUnit\tPrice\tQuantity");
             foreach (var product in cart)
             {
-                Console.WriteLine($"\nProduct ID: {product.ProductId}");
-                Console.WriteLine($"Name: {product.Name}");
-                Console.WriteLine($"Unit: {product.Unit}");
-                Console.WriteLine($"Price: {product.Price:F2}");
-                Console.WriteLine($"Quantity: {product.Quantity}"); // Display quantity
+                Console.WriteLine($"\n{product.ProductId}\t\t{product.Name}\t{product.Unit}\t{product.Price:F2}\t{product.Quantity}");
                 totalPrice += product.Price * product.Quantity;
             }
             Console.WriteLine("\nTotal Price: " + totalPrice.ToString("F2"));
@@ -150,7 +147,6 @@ internal class Program
     private static void AddToCart()
     {
         Console.WriteLine("\nAdd products to cart");
-        ViewProducts();
 
         while (true)
         {
@@ -173,9 +169,19 @@ internal class Program
                     {
                         if (quantity > 0)
                         {
-                            product.Quantity = quantity; // Save the quantity in the product object
-                            product.Price = ApplyDiscount(product.ProductId, product.Price, quantity);
-                            cart.Add(product);
+                            var existingCartItem = cart.Find(item => item.ProductId == productId);
+                            if (existingCartItem != null)
+                            {
+                                existingCartItem.Quantity += quantity; // Accumulate quantity
+                                existingCartItem.Price += ApplyDiscount(product.ProductId, product.Price, quantity);
+                            }
+                            else
+                            {
+                                product.Quantity = quantity;
+                                product.Price = ApplyDiscount(product.ProductId, product.Price, quantity);
+                                cart.Add(product);
+                            }
+
                             Console.WriteLine($"\n{product.Name} added to the cart.");
                         }
                         else
@@ -200,8 +206,12 @@ internal class Program
         }
     }
 
+
+
     private static double ApplyDiscount(int productId, double price, int quantity)
     {
+        double totalDiscount = 0.0;
+
         foreach (var discount in discounts)
         {
             if (discount.ProductIds.Contains(productId) && IsDiscountApplicable(discount))
@@ -209,17 +219,19 @@ internal class Program
                 if (discount.DiscountId == 1)
                 {
                     int eligibleQuantity = quantity / 2;
-                    price *= (quantity - eligibleQuantity);
+                    totalDiscount += (eligibleQuantity * price);
                 }
                 else if (discount.DiscountId == 2)
                 {
                     int eligibleQuantity = quantity / 3;
-                    price *= (quantity - eligibleQuantity);
+                    totalDiscount += (eligibleQuantity * price);
                 }
             }
         }
-        return price;
+
+        return price - totalDiscount;
     }
+
 
     private static bool IsDiscountApplicable(Discount discount)
     {
